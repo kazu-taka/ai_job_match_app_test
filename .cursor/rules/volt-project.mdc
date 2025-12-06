@@ -1,0 +1,129 @@
+---
+alwaysApply: true
+globs:
+  - "resources/views/livewire/**/*.blade.php"
+  - "resources/views/pages/**/*.blade.php"
+---
+
+# Volt Functional実装ルール
+
+## このプロジェクト固有の方針
+- **Functionalスタイル必須** - クラスベースコンポーネント禁止
+- `sail artisan make:volt` 実行時は `--functional` オプション必須
+- 単一責任の原則遵守
+- コンポーネントの再利用性重視
+
+## 必須構文パターン
+
+### 基本構造
+```php
+<?php
+use function Livewire\Volt\{state, mount, computed, rules};
+
+// 状態定義
+state(['propertyName' => 'defaultValue']);
+
+// 初期化処理（必要に応じて）
+mount(function () {
+    // 初期化ロジック
+});
+
+// バリデーションルール
+rules([
+    'field' => 'required|max:255',
+]);
+
+// メソッド定義
+$methodName = function () {
+    $this->validate();
+    
+    // 処理ロジック
+    
+    // リダイレクト（必要に応じて）
+    return $this->redirect(route('route.name'), navigate: true);
+};
+?>
+
+<div>
+    <!-- Bladeテンプレート -->
+</div>
+```
+
+### モデルバインディング
+```php
+// ルートパラメータ名とモデル名を一致させる
+mount(function (Model $model) {
+    $this->model = $model;
+});
+```
+
+### 認可制御
+```php
+// アクション実行前に必ず認可チェック
+$update = function () {
+    $this->authorize('update', $this->model);
+    // 処理
+};
+```
+
+## ルーティング設計
+
+### 基本方針
+- フルページコンポーネントは`Volt::route()`使用
+- 名前付きルート必須
+- ミドルウェアはルート定義時に指定
+
+### 命名規約
+- リソース系（CRUD）: 複数形（例: memos, posts, jobs）
+- 機能系: 単数形または適切な形式（dashboard, profile, settings）
+
+### コンポーネント配置
+- パス: `resources/views/livewire/{resource}/{action}.blade.php`
+- 例: 
+  - `resources/views/livewire/jobs/index.blade.php`
+  - `resources/views/livewire/jobs/create.blade.php`
+  - `resources/views/livewire/jobs/edit.blade.php`
+  - `resources/views/livewire/jobs/show.blade.php`
+
+## UI/UX
+- Flux UI Free コンポーネント優先使用
+- Tailwind CSSによるスタイリング
+- レスポンシブデザイン必須
+- ローディング状態の適切な表示（`wire:loading`）
+
+## パフォーマンス
+- N+1問題回避（先読み込み使用）
+- `computed`プロパティの適切な活用
+- 不要な再レンダリング防止
+
+## よくある間違い防止
+
+### NG: use function文の不足
+```php
+<?php
+state(['title' => '']);  // エラー
+?>
+```
+
+### OK: 正しいインポート
+```php
+<?php
+use function Livewire\Volt\{state};
+
+state(['title' => '']);
+?>
+```
+
+### NG: $thisの誤用
+```php
+$save = function () {
+    $items = Item::all();  // 状態として保持されない
+};
+```
+
+### OK: 正しい状態管理
+```php
+$save = function () {
+    $this->items = Item::all();  // 状態を更新
+};
+```

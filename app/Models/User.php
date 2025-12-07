@@ -23,6 +23,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -51,6 +52,22 @@ class User extends Authenticatable
     }
 
     /**
+     * ワーカープロフィールとの1対1リレーション
+     */
+    public function workerProfile(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(WorkerProfile::class);
+    }
+
+    /**
+     * 企業プロフィールとの1対1リレーション
+     */
+    public function companyProfile(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(CompanyProfile::class);
+    }
+
+    /**
      * Get the user's initials
      */
     public function initials(): string
@@ -58,7 +75,7 @@ class User extends Authenticatable
         return Str::of($this->name)
             ->explode(' ')
             ->take(2)
-            ->map(fn ($word) => Str::substr($word, 0, 1))
+            ->map(fn($word) => Str::substr($word, 0, 1))
             ->implode('');
     }
 }

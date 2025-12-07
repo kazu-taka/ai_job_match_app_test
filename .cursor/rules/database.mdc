@@ -20,9 +20,233 @@ alwaysApply: true
 ## 実装済みテーブル
 
 ### users（認証システムで自動作成済み）
-- id
-- name
-- email
-- password
+**目的**: ユーザーアカウント管理（企業・ワーカーの識別）
 
-<!-- ここから段階的に追加 -->
+**カラム定義**:
+- id: bigint unsigned, primary key
+- name: string(255), 氏名または会社名
+- email: string(255), unique, ログインに使用
+- email_verified_at: timestamp, nullable
+- password: string(255), ハッシュ化
+- role: enum('company', 'worker'), ユーザー役割（デフォルト='worker'）
+- two_factor_secret: text, nullable
+- two_factor_recovery_codes: text, nullable
+- two_factor_confirmed_at: timestamp, nullable
+- remember_token: string(100), nullable
+- created_at: timestamp
+- updated_at: timestamp
+
+**インデックス**:
+- PRIMARY: id
+- UNIQUE: email
+
+**リレーション**:
+- worker_profiles: 1対1
+- company_profiles: 1対1
+
+---
+
+### worker_profilesテーブル
+
+**目的**: ワーカー固有プロフィール情報
+
+**カラム定義**:
+- user_id: bigint unsigned, primary key, 外部キー（users.id）
+- gender: enum('male', 'female', 'other'), 性別
+- birthdate: date, 生年月日
+- skills: text, nullable, スキル（例：英語、TOEIC700点、プログラミング（Laravel））
+- experiences: text, nullable, 経験（例：接客 3年、プログラミング5年、スーパーのレジ1年）
+- desired_jobs: string(255), nullable, 希望職種
+- desired_location_id: bigint unsigned, nullable, 外部キー（locations.id）、希望勤務地
+- created_at, updated_at: timestamps
+
+**インデックス**:
+- PRIMARY: user_id
+- FOREIGN KEY: user_id (users.id) ON DELETE CASCADE
+- FOREIGN KEY: desired_location_id (locations.id) ON DELETE RESTRICT
+
+**リレーション**:
+- users: 1対1（CASCADE削除）
+- locations: 多対1（RESTRICT削除）
+
+---
+
+### company_profilesテーブル
+
+**目的**: 企業固有プロフィール情報
+
+**カラム定義**:
+- user_id: bigint unsigned, primary key, 外部キー（users.id）
+- location_id: bigint unsigned, 外部キー（locations.id）、所在地
+- address: string(255), 所在地住所
+- representative: string(255), 担当者名
+- phone_number: string(255), 担当者連絡先
+- created_at, updated_at: timestamps
+
+**インデックス**:
+- PRIMARY: user_id
+- FOREIGN KEY: user_id (users.id) ON DELETE CASCADE
+- FOREIGN KEY: location_id (locations.id) ON DELETE RESTRICT
+
+**リレーション**:
+- users: 1対1（CASCADE削除）
+- locations: 多対1（RESTRICT削除）
+
+---
+
+### locationsテーブル
+
+**目的**: 都道府県・市区町村マスタデータ
+
+**カラム定義**:
+- id: bigint unsigned, primary key
+- prefecture: string(255), 都道府県名
+- city: string(255), nullable, 市区町村名（都道府県データの場合はNULL）
+- code: string(255), unique, 地域コード（JIS X 0402準拠）
+- created_at, updated_at: timestamps
+
+**インデックス**:
+- PRIMARY: id
+- UNIQUE: code
+
+**リレーション**: なし
+
+**備考**:
+- cityがNULLのデータ: 都道府県データ（47件）
+- cityが値ありのデータ: 市区町村データ（1747件）
+- 登録件数: 1794件（都道府県47件 + 市区町村1747件）
+
+---
+
+### codesテーブル
+
+**目的**: 雇用形態・勤務形態・業種のマスタデータ
+
+**カラム定義**:
+- id: bigint unsigned, primary key
+- type: bigint, コード種類（type=0にコード種類の仕様を登録）
+- type_id: bigint, コード種類ごとのID
+- name: string(255), 表示名称
+- description: text, nullable, 補足説明
+- sort_order: integer, nullable, 表示順
+- created_at, updated_at: timestamps
+
+**インデックス**:
+- PRIMARY: id
+
+**リレーション**: なし
+
+**コード種類一覧**:
+- type=0: コード種類定義
+- type=1: 雇用形態
+- type=2: 勤務形態
+- type=3: 業種
+
+---
+
+## シーディング
+
+### usersテーブル
+
+**企業ユーザー（5件）**:
+- name="株式会社北海水産", email="hokkai@suisan.co.jp", password="password", role="company"
+- name="東京テクノロジー", email="tokyo@tech-tokyo.jp", password="password", role="company"
+- name="大阪商事株式会社", email="osaka@osaka-shoji.com", password="password", role="company"
+- name="福岡フーズ", email="fukuoka@foods-fukuoka.jp", password="password", role="company"
+- name="名古屋エンジニアリング", email="nagoya@nagoya-eng.co.jp", password="password", role="company"
+
+**ワーカーユーザー（5件）**:
+- name="佐藤 太郎", email="sato.taro@gmail.com", password="password", role="worker"
+- name="田中 花子", email="tanaka.hanako@yahoo.co.jp", password="password", role="worker"
+- name="鈴木 一郎", email="suzuki.ichiro@outlook.com", password="password", role="worker"
+- name="高橋 美咲", email="takahashi.misaki@icloud.com", password="password", role="worker"
+- name="渡辺 健太", email="watanabe.kenta@hotmail.com", password="password", role="worker"
+
+**パスワードルール**: ハッシュ化して登録（Hash::make()使用）、email_verified_atは現在時刻
+
+---
+
+### worker_profilesテーブル
+
+**ワーカープロフィール（5件）**:
+
+| user_id | 性別 | 生年月日 | スキル | 経験 | 希望職種 | 希望勤務地コード |
+|-|-|-|-|-|-|-|
+| 6 | male | 1990-05-15 | 接客、英語（TOEIC750点）、Excel | 飲食店勤務 5年、ホテルフロント 3年 | 接客・サービス | 011002 |
+| 7 | female | 1995-08-22 | プログラミング（PHP、JavaScript）、Laravel | Web開発 3年、フリーランス 2年 | エンジニア | 131016 |
+| 8 | male | 1988-03-10 | 営業、プレゼンテーション、Excel | 営業職 8年、チームリーダー 2年 | 営業・企画 | 271004 |
+| 9 | female | 1992-11-30 | デザイン（Photoshop、Illustrator）、UI/UX | グラフィックデザイン 4年 | デザイナー | 401005 |
+| 10 | male | 1993-07-05 | 会計、簿記2級、Excel | 経理事務 5年 | 事務・経理 | 231002 |
+
+**備考**:
+- user_idは6〜10（ワーカーユーザー）
+- 希望勤務地コードはlocationsテーブルの団体コード
+  - 011002: 札幌市
+  - 131016: 東京都千代田区
+  - 271004: 大阪市
+  - 401005: 福岡市
+  - 231002: 名古屋市
+
+---
+
+### company_profilesテーブル
+
+**企業プロフィール（5件）**:
+
+| user_id | 所在地コード | 所在地住所 | 担当者名 | 担当者連絡先 |
+|-|-|-|-|-|
+| 1 | 011002 | 北海道札幌市中央区北1条西5丁目 | 山田　太郎 | 011-123-4567 |
+| 2 | 131016 | 東京都千代田区丸の内1-1-1 | 田中　次郎 | 03-1234-5678 |
+| 3 | 271004 | 大阪府大阪市北区梅田1-1-1 | 鈴木　三郎 | 06-1234-5678 |
+| 4 | 401005 | 福岡県福岡市博多区博多駅前1-1-1 | 高橋　四郎 | 092-123-4567 |
+| 5 | 231002 | 愛知県名古屋市中区栄1-1-1 | 伊藤　五郎 | 052-123-4567 |
+
+**備考**:
+- user_idは1〜5（企業ユーザー）
+- user_id対応の企業名はusersテーブルのnameを参照
+- 所在地コードはlocationsテーブルの団体コード
+
+---
+
+### locationsテーブル
+
+**データソース**: files/市区町村コード.csv
+
+**カラム対応**:
+- CSVの「団体コード」 → locationsテーブルの「code」
+- CSVの「都道府県名（漢字）」 → locationsテーブルの「prefecture」
+- CSVの「市区町村名（漢字）」 → locationsテーブルの「city」（空白の場合はNULL）
+
+**処理要件**:
+- 進捗表示: 500件ごと
+- パフォーマンス最適化: バッチ挿入
+- 登録件数: 1794件
+
+---
+
+### codesテーブル
+
+**登録データ（15件）**:
+
+コード種類定義（type=0）:
+- type=0, type_id=1, name="雇用形態", sort_order=1
+- type=0, type_id=2, name="勤務形態", sort_order=2
+- type=0, type_id=3, name="業種", sort_order=3
+
+雇用形態（type=1）:
+- type=1, type_id=1, name="正社員", sort_order=1
+- type=1, type_id=2, name="契約社員", sort_order=2
+- type=1, type_id=3, name="パート", sort_order=3
+- type=1, type_id=4, name="アルバイト", sort_order=4
+
+勤務形態（type=2）:
+- type=2, type_id=1, name="出社", sort_order=1
+- type=2, type_id=2, name="週3日", sort_order=2
+- type=2, type_id=3, name="時短", sort_order=3
+- type=2, type_id=4, name="リモート", sort_order=4
+
+業種（type=3）:
+- type=3, type_id=1, name="飲食", sort_order=1
+- type=3, type_id=2, name="製造", sort_order=2
+- type=3, type_id=3, name="システム開発", sort_order=3
+- type=3, type_id=4, name="教育", sort_order=

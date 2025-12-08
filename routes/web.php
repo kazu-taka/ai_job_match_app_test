@@ -40,13 +40,8 @@ Route::middleware(['auth', 'role:company'])->group(function () {
     Volt::route('company/edit', 'company.edit')->name('company.edit');
 });
 
-// ロールベースミドルウェアの使用例:
-// Route::middleware(['auth', 'role:company'])->group(function () {
-//     Volt::route('jobs/create', 'jobs.create')->name('jobs.create');
-//     Volt::route('jobs/{job}/edit', 'jobs.edit')->name('jobs.edit');
-// });
-//
 // ワーカーユーザー専用のルート
-// Route::middleware(['auth', 'role:worker'])->group(function () {
-//     Volt::route('applications', 'applications.index')->name('applications.index');
-// });
+Route::middleware(['auth', 'role:worker'])->group(function () {
+    Volt::route('worker/profile', 'worker.show')->name('worker.profile');
+    Volt::route('worker/edit', 'worker.edit')->name('worker.edit');
+});

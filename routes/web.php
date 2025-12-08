@@ -31,8 +31,12 @@ Route::middleware(['auth'])->group(function () {
         ->name('two-factor.show');
 });
 
-// ロールベースミドルウェアの使用例:
 // 企業ユーザー専用のルート
+Route::middleware(['auth', 'role:company'])->group(function () {
+    Volt::route('company/profile', 'company.show')->name('company.profile');
+});
+
+// ロールベースミドルウェアの使用例:
 // Route::middleware(['auth', 'role:company'])->group(function () {
 //     Volt::route('jobs/create', 'jobs.create')->name('jobs.create');
 //     Volt::route('jobs/{job}/edit', 'jobs.edit')->name('jobs.edit');

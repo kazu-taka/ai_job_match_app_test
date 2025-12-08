@@ -109,4 +109,63 @@ AI求人マッチングアプリケーション
 - **コンポーネント**: `resources/views/livewire/settings/two-factor.blade.php`
 - **機能**: 2FAの有効化・無効化、リカバリーコード管理
 
-<!-- ここから段階的に追加 -->
+### 企業プロフィール管理
+
+#### 企業登録画面
+- **ルート**: `GET /company/register`、`POST /company/register`
+- **ルート名**: `company.register`
+- **コンポーネント**: `resources/views/livewire/company/register.blade.php`
+- **ミドルウェア**: なし（未認証ユーザー向け）
+- **機能**: ユーザー登録と企業プロフィールを同時登録
+- **入力項目**:
+  - name: 企業名（必須）
+  - email: メールアドレス（必須、ユニーク）
+  - password: パスワード（必須、8文字以上）
+  - password_confirmation: パスワード確認（必須）
+  - location_id: 所在地（必須、2段階選択：都道府県→市区町村）
+  - address: 所在地住所（必須、200文字以内）
+  - representative: 担当者名（必須、50文字以内）
+  - phone_number: 担当者連絡先（必須、30文字以内）
+- **処理**:
+  - usersテーブルにユーザー登録（role='company'、name=企業名）
+  - company_profilesテーブルにプロフィール登録
+  - 登録成功後、企業詳細画面（company.profile）にリダイレクト
+- **UI**:
+  - ユーザー情報と企業プロフィール情報を1画面で入力
+  - 2段階選択（都道府県→市区町村）の実装
+
+#### 企業詳細画面
+- **ルート**: `GET /company/profile`
+- **ルート名**: `company.profile`
+- **コンポーネント**: `resources/views/livewire/company/show.blade.php`
+- **ミドルウェア**: `auth`, `role:company`
+- **機能**: ログインユーザーの企業プロフィール表示
+- **表示項目**: company_profilesテーブルの全項目
+- **アクション**: 編集画面へのリンク
+
+#### 企業編集画面
+- **ルート**: `GET /company/edit`
+- **ルート名**: `company.edit`
+- **コンポーネント**: `resources/views/livewire/company/edit.blade.php`
+- **ミドルウェア**: `auth`, `role:company`
+- **機能**: ログインユーザーの企業プロフィール編集
+- **入力項目**: 企業プロフィール項目のみ（location_id, address, representative, phone_number）
+- **処理**:
+  - バリデーション後、company_profilesテーブルを更新
+  - 更新成功後、企業詳細画面（company.profile）にリダイレクト
+- **UI**:
+  - 既存データを初期表示
+  - 2段階選択（都道府県→市区町村）の実装
+- **注意**: 企業名（users.name）の変更は別途ユーザー情報編集機能で対応
+
+#### 所在地の2段階選択仕様
+- **都道府県選択**:
+  - locationsテーブルから`city IS NULL`のデータを取得
+  - `code`の昇順でソート
+- **市区町村選択**:
+  - 選択された都道府県に対応する市区町村を取得
+  - `prefecture`が選択された都道府県と一致し、`city IS NOT NULL`のデータ
+  - `code`の昇順でソート
+- **連動動作**:
+  - 都道府県を変更すると、市区町村の選択肢が更新される
+  - 都道府県を変更すると、市区町村の選択はリセットされる

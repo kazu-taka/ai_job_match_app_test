@@ -53,8 +53,8 @@ mount(function () {
         {{-- ヘッダー --}}
         <div class="flex items-center justify-between">
             <flux:heading size="xl">企業プロフィール</flux:heading>
-            <flux:button disabled>
-                編集（準備中）
+            <flux:button :href="route('company.edit')" wire:navigate>
+                編集
             </flux:button>
         </div>
 

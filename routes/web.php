@@ -12,6 +12,9 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+// 企業登録（未認証ユーザー向け）
+Volt::route('company/register', 'company.register')->name('company.register');
+
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
@@ -34,6 +37,7 @@ Route::middleware(['auth'])->group(function () {
 // 企業ユーザー専用のルート
 Route::middleware(['auth', 'role:company'])->group(function () {
     Volt::route('company/profile', 'company.show')->name('company.profile');
+    Volt::route('company/edit', 'company.edit')->name('company.edit');
 });
 
 // ロールベースミドルウェアの使用例:

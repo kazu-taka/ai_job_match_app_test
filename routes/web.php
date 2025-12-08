@@ -15,6 +15,9 @@ Route::view('dashboard', 'dashboard')
 // 企業登録（未認証ユーザー向け）
 Volt::route('company/register', 'company.register')->name('company.register');
 
+// ワーカー登録（未認証ユーザー向け）
+Volt::route('worker/register', 'worker.register')->name('worker.register');
+
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 

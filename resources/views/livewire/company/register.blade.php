@@ -245,3 +245,4 @@ $register = function () {
         </div>
     </div>
 </div>
+

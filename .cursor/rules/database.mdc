@@ -180,6 +180,37 @@ alwaysApply: true
 
 ---
 
+### job_applicationsテーブル
+
+**目的**: 応募状況の記録
+
+**カラム定義**:
+- id: bigint unsigned, primary key
+- job_id: bigint unsigned, 外部キー（job_posts.id）、求人情報
+- worker_id: bigint unsigned, 外部キー（users.id）、ワーカーのユーザーID
+- motive: text, nullable, 志望動機
+- status: enum('applied', 'accepted', 'rejected', 'declined'), ステータス（applied=応募、accepted=承認、rejected=不承認、declined=辞退）
+- applied_at: datetime, 応募日時
+- judged_at: datetime, nullable, 採用判定日時（承認または不承認時）
+- declined_at: datetime, nullable, 辞退日時
+- created_at, updated_at: timestamps
+
+**インデックス**:
+- PRIMARY: id
+- UNIQUE: (job_id, worker_id) - 重複応募防止
+- FOREIGN KEY: job_id (job_posts.id) ON DELETE RESTRICT
+- FOREIGN KEY: worker_id (users.id) ON DELETE RESTRICT
+
+**リレーション**:
+- job_posts: 多対1（RESTRICT削除）
+- users: 多対1（RESTRICT削除）
+
+**備考**:
+- (job_id, worker_id)に複合ユニーク制約を設定し、重複応募を防止
+- statusのデフォルト値は'applied'
+
+---
+
 ## シーディング
 
 ### usersテーブル

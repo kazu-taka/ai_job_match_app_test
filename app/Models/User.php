@@ -77,6 +77,14 @@ class User extends Authenticatable
     }
 
     /**
+     * 応募情報との1対多リレーション（ワーカーユーザーのみ）
+     */
+    public function jobApplications(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(JobApplication::class, 'worker_id');
+    }
+
+    /**
      * Get the user's initials
      */
     public function initials(): string
@@ -84,7 +92,7 @@ class User extends Authenticatable
         return Str::of($this->name)
             ->explode(' ')
             ->take(2)
-            ->map(fn ($word) => Str::substr($word, 0, 1))
+            ->map(fn($word) => Str::substr($word, 0, 1))
             ->implode('');
     }
 }

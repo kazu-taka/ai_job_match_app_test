@@ -28,5 +28,10 @@ class DatabaseSeeder extends Seeder
             WorkerProfileSeeder::class,
             CompanyProfileSeeder::class,
         ]);
+
+        // 求人データを登録
+        $this->call([
+            JobPostSeeder::class,
+        ]);
     }
 }

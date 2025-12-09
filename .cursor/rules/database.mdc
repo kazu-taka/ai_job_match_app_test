@@ -144,6 +144,42 @@ alwaysApply: true
 
 ---
 
+### job_postsテーブル
+
+**目的**: 求人情報
+
+**カラム定義**:
+- id: bigint unsigned, primary key
+- company_id: bigint unsigned, 外部キー（users.id）、求人投稿した企業ユーザー
+- title: string(255), 求人タイトル
+- description: text, 詳細内容
+- employment_type_id: bigint, 雇用形態（codes.type=1のcodes.type_id）
+- work_style_id: bigint, 勤務形態（codes.type=2のcodes.type_id）
+- industry_id: bigint, 業種（codes.type=3のcodes.type_id）
+- location_id: bigint unsigned, 外部キー（locations.id）、勤務地
+- working_hours: string(255), 勤務時間
+- salary: integer, 給与（時給、日給、月給）
+- number_of_positions: integer, 募集人数
+- posted_at: datetime, nullable, 投稿日時
+- expires_at: datetime, nullable, 募集期限
+- created_at, updated_at: timestamps
+
+**インデックス**:
+- PRIMARY: id
+- FOREIGN KEY: company_id (users.id) ON DELETE CASCADE
+- FOREIGN KEY: location_id (locations.id) ON DELETE RESTRICT
+
+**リレーション**:
+- users: 多対1（CASCADE削除）- 企業ユーザーが削除されたら求人も削除
+- codes: 多対1（employment_type_id、work_style_id、industry_id）
+- locations: 多対1（RESTRICT削除）
+
+**備考**:
+- employment_type_id、work_style_id、industry_idは、codesテーブルのtype_idを参照
+- posted_atは登録時に自動的に現在日時を設定
+
+---
+
 ## シーディング
 
 ### usersテーブル
@@ -250,3 +286,81 @@ alwaysApply: true
 - type=3, type_id=2, name="製造", sort_order=2
 - type=3, type_id=3, name="システム開発", sort_order=3
 - type=3, type_id=4, name="教育", sort_order=
+
+---
+
+### job_postsテーブル
+
+**登録データ（43件）**:
+
+株式会社北海水産（company_id=1）- 8件:
+- title="水産加工スタッフ募集", description="北海道の新鮮な魚介類を扱う水産加工のお仕事です。未経験者歓迎！丁寧に指導します。", employment_type_id=3, work_style_id=1, industry_id=2, location_code="011002", working_hours="9:00-15:00", salary=1100, number_of_positions=3, expires_at="1ヶ月後"
+- title="飲食店ホールスタッフ", description="直営飲食店でのホール接客業務。週3日からOK。学生・主婦歓迎！", employment_type_id=4, work_style_id=3, industry_id=1, location_code="011002", working_hours="17:00-22:00", salary=1200, number_of_positions=2
+- title="鮮魚販売スタッフ", description="直営店舗での鮮魚販売。接客・品出し・在庫管理など。未経験OK。", employment_type_id=3, work_style_id=1, industry_id=1, location_code="012025", working_hours="6:00-14:00", salary=1150, number_of_positions=2
+- title="配送ドライバー", description="水産物の配送業務。要普通免許。早朝勤務手当あり。", employment_type_id=2, work_style_id=1, industry_id=2, location_code="012025", working_hours="5:00-13:00", salary=280000, number_of_positions=2, expires_at="2ヶ月後"
+- title="経理事務", description="経理業務全般。仕訳入力、請求書発行など。簿記資格歓迎。", employment_type_id=2, work_style_id=1, industry_id=2, location_code="011002", working_hours="9:00-17:00", salary=240000, number_of_positions=1
+- title="品質管理スタッフ", description="水産加工品の品質チェック。衛生管理経験者優遇。", employment_type_id=1, work_style_id=1, industry_id=2, location_code="012033", working_hours="8:00-17:00", salary=320000, number_of_positions=1
+- title="営業スタッフ", description="飲食店向け営業。既存顧客フォローメイン。要普通免許。", employment_type_id=1, work_style_id=1, industry_id=2, location_code="011002", working_hours="9:00-18:00", salary=350000, number_of_positions=2
+- title="調理補助スタッフ", description="直営食堂での調理補助。野菜カット、盛り付けなど。未経験OK。", employment_type_id=4, work_style_id=3, industry_id=1, location_code="012025", working_hours="10:00-16:00", salary=1050, number_of_positions=3
+
+東京テクノロジー株式会社（company_id=2）- 10件:
+- title="Webアプリケーションエンジニア", description="PHP/Laravelを使用した自社サービス開発。フルリモート可能。技術力を高めたい方歓迎！", employment_type_id=1, work_style_id=2, industry_id=3, location_code="131016", working_hours="10:00-19:00", salary=500000, number_of_positions=2, expires_at="3ヶ月後"
+- title="システム運用保守担当", description="自社システムの運用・保守業務。障害対応やユーザーサポートを担当します。", employment_type_id=2, work_style_id=1, industry_id=3, location_code="131032", working_hours="9:00-18:00", salary=350000, number_of_positions=1
+- title="プログラミング講師", description="初心者向けプログラミングスクールの講師。PHPやJavaScriptを教えます。時短勤務可。", employment_type_id=3, work_style_id=4, industry_id=4, location_code="131041", working_hours="10:00-15:00", salary=2000, number_of_positions=2
+- title="フロントエンドエンジニア", description="React/Vue.jsを使用したUI開発。モダンな技術スタックで開発できます。", employment_type_id=1, work_style_id=2, industry_id=3, location_code="131016", working_hours="10:00-19:00", salary=480000, number_of_positions=2
+- title="インフラエンジニア", description="AWS/GCPを使用したクラウドインフラ構築・運用。SRE業務にも挑戦できます。", employment_type_id=1, work_style_id=2, industry_id=3, location_code="131032", working_hours="10:00-19:00", salary=550000, number_of_positions=1
+- title="データサイエンティスト", description="Python/機械学習を使用したデータ分析。統計学の知識を活かせます。", employment_type_id=1, work_style_id=2, industry_id=3, location_code="131016", working_hours="10:00-19:00", salary=600000, number_of_positions=1, expires_at="2ヶ月後"
+- title="QAエンジニア", description="自社サービスの品質保証。テスト設計・実行・自動化を担当。", employment_type_id=2, work_style_id=1, industry_id=3, location_code="131130", working_hours="9:00-18:00", salary=380000, number_of_positions=1
+- title="Webデザイナー", description="自社サービスのUI/UXデザイン。Figma使用経験者優遇。", employment_type_id=2, work_style_id=2, industry_id=3, location_code="131041", working_hours="10:00-19:00", salary=400000, number_of_positions=1
+- title="ITサポート事務", description="社内システムのヘルプデスク対応。ITに興味がある方歓迎。", employment_type_id=3, work_style_id=1, industry_id=3, location_code="131016", working_hours="9:00-17:00", salary=1500, number_of_positions=2
+- title="プロジェクトマネージャー", description="開発プロジェクトの管理。上流工程からリリースまで一貫して担当。", employment_type_id=1, work_style_id=1, industry_id=3, location_code="131032", working_hours="10:00-19:00", salary=700000, number_of_positions=1
+
+大阪商事株式会社（company_id=3）- 8件:
+- title="営業事務スタッフ", description="商社での営業事務業務。伝票処理や電話対応など。Excel使用経験者優遇。", employment_type_id=2, work_style_id=1, industry_id=2, location_code="271004", working_hours="9:00-17:00", salary=250000, number_of_positions=1, expires_at="1ヶ月後"
+- title="法人営業", description="既存取引先への営業活動。提案営業経験者優遇。", employment_type_id=1, work_style_id=1, industry_id=2, location_code="271004", working_hours="9:00-18:00", salary=380000, number_of_positions=2
+- title="貿易事務", description="輸出入書類作成、通関手続き。英語スキル活かせます。", employment_type_id=2, work_style_id=1, industry_id=2, location_code="271403", working_hours="9:00-17:00", salary=280000, number_of_positions=1
+- title="倉庫管理スタッフ", description="商品の入出庫管理、在庫管理。フォークリフト免許歓迎。", employment_type_id=3, work_style_id=1, industry_id=2, location_code="272035", working_hours="8:00-17:00", salary=1200, number_of_positions=2, expires_at="3ヶ月後"
+- title="総務人事", description="総務・人事業務全般。給与計算、採用業務など。", employment_type_id=2, work_style_id=1, industry_id=2, location_code="271004", working_hours="9:00-17:00", salary=270000, number_of_positions=1
+- title="商品企画", description="新商品の企画・開発。マーケティング経験者優遇。", employment_type_id=1, work_style_id=1, industry_id=2, location_code="271004", working_hours="9:00-18:00", salary=420000, number_of_positions=1
+- title="経理担当", description="月次決算、年次決算。簿記2級以上必須。", employment_type_id=1, work_style_id=1, industry_id=2, location_code="271403", working_hours="9:00-17:00", salary=360000, number_of_positions=1
+- title="一般事務", description="データ入力、電話対応、来客対応など。未経験OK。", employment_type_id=3, work_style_id=1, industry_id=2, location_code="271004", working_hours="9:00-17:00", salary=1100, number_of_positions=2
+
+株式会社福岡フーズ（company_id=4）- 8件:
+- title="カフェスタッフ募集", description="直営カフェでの接客・調理補助。朝の時間帯で働けます。未経験OK！", employment_type_id=4, work_style_id=1, industry_id=1, location_code="401307", working_hours="7:00-14:00", salary=1000, number_of_positions=3, expires_at="1ヶ月後"
+- title="食品製造スタッフ", description="惣菜・弁当の製造スタッフ。週3日からOK。主婦の方活躍中！", employment_type_id=3, work_style_id=3, industry_id=2, location_code="402192", working_hours="8:00-16:00", salary=1150, number_of_positions=2
+- title="店舗マネージャー", description="直営カフェの店舗運営管理。スタッフ育成、売上管理など。", employment_type_id=1, work_style_id=1, industry_id=1, location_code="401307", working_hours="8:00-17:00", salary=320000, number_of_positions=1
+- title="パティシエ", description="カフェでのケーキ・デザート製造。製菓専門学校卒業者優遇。", employment_type_id=2, work_style_id=1, industry_id=1, location_code="401005", working_hours="6:00-15:00", salary=280000, number_of_positions=1
+- title="商品開発", description="新メニュー・新商品の開発。食品開発経験者歓迎。", employment_type_id=1, work_style_id=1, industry_id=2, location_code="401307", working_hours="9:00-18:00", salary=380000, number_of_positions=1
+- title="配送ドライバー", description="惣菜・弁当の配送。要普通免許。短時間勤務OK。", employment_type_id=3, work_style_id=3, industry_id=2, location_code="402192", working_hours="10:00-15:00", salary=1200, number_of_positions=2
+- title="品質管理", description="食品の衛生管理、品質チェック。食品衛生責任者資格歓迎。", employment_type_id=2, work_style_id=1, industry_id=2, location_code="401005", working_hours="8:00-17:00", salary=270000, number_of_positions=1
+- title="営業スタッフ", description="法人向け弁当販売営業。既存顧客メイン。要普通免許。", employment_type_id=1, work_style_id=1, industry_id=1, location_code="401307", working_hours="9:00-18:00", salary=340000, number_of_positions=1
+
+名古屋エンジニアリング株式会社（company_id=5）- 9件:
+- title="社内システム開発エンジニア", description="自社業務システムの開発・改善。Java/Pythonなど。上流工程にも携われます。", employment_type_id=1, work_style_id=1, industry_id=3, location_code="231002", working_hours="9:00-18:00", salary=450000, number_of_positions=2, expires_at="3ヶ月後"
+- title="ITサポートスタッフ", description="社内ヘルプデスク業務。PCトラブル対応やシステム操作サポート。リモート勤務可。", employment_type_id=2, work_style_id=2, industry_id=3, location_code="232076", working_hours="10:00-19:00", salary=300000, number_of_positions=1
+- title="システム開発インターン", description="実務経験を積めるインターンシップ。プログラミング学習中の学生歓迎！", employment_type_id=4, work_style_id=3, industry_id=3, location_code="231002", working_hours="10:00-16:00", salary=1500, number_of_positions=2, expires_at="2ヶ月後"
+- title="組込みエンジニア", description="産業機器の組込みシステム開発。C/C++経験者優遇。", employment_type_id=1, work_style_id=1, industry_id=3, location_code="232114", working_hours="9:00-18:00", salary=480000, number_of_positions=1
+- title="ネットワークエンジニア", description="社内ネットワーク構築・運用。CCNA資格歓迎。", employment_type_id=2, work_style_id=1, industry_id=3, location_code="231002", working_hours="9:00-18:00", salary=380000, number_of_positions=1
+- title="セールスエンジニア", description="技術営業。顧客への技術提案、導入支援を担当。", employment_type_id=1, work_style_id=1, industry_id=3, location_code="232076", working_hours="9:00-18:00", salary=420000, number_of_positions=1
+- title="システムテスター", description="システムの動作検証、テスト実行。未経験可、研修あり。", employment_type_id=3, work_style_id=1, industry_id=3, location_code="231002", working_hours="9:00-17:00", salary=1400, number_of_positions=2
+- title="技術サポート", description="顧客向け技術サポート。電話・メール対応。リモート可。", employment_type_id=2, work_style_id=2, industry_id=3, location_code="232114", working_hours="10:00-19:00", salary=320000, number_of_positions=1
+- title="データベースエンジニア", description="データベース設計・構築・運用。SQL経験者優遇。", employment_type_id=1, work_style_id=1, industry_id=3, location_code="231002", working_hours="9:00-18:00", salary=500000, number_of_positions=1
+
+**備考**:
+- company_idは1〜5（企業ユーザー）
+- employment_type_id: 1=正社員、2=契約社員、3=パート、4=アルバイト
+- work_style_id: 1=出社、2=リモート、3=週3日、4=時短
+- industry_id: 1=飲食、2=製造、3=システム開発、4=教育
+- location_codeはlocationsテーブルのcode（location_idに変換して登録）
+  - 011002: 札幌市、012025: 函館市、012033: 小樽市
+  - 131016: 千代田区、131032: 港区、131041: 新宿区、131130: 渋谷区
+  - 271004: 大阪市、271403: 堺市、272035: 豊中市
+  - 401005: 北九州市、401307: 福岡市、402192: 大野城市
+  - 231002: 名古屋市、232076: 豊田市、232114: 刈谷市
+- salaryは雇用形態により単位が異なる
+  - 正社員・契約社員: 月給（円）
+  - パート・アルバイト: 時給（円）
+- posted_atは登録時に現在日時を自動設定
+- expires_atは募集期限
+  - 期限あり: 登録日から1ヶ月後、2ヶ月後、3ヶ月後（9件）
+  - 期限なし: NULL（34件）

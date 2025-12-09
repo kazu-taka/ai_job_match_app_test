@@ -422,3 +422,44 @@ AI求人マッチングアプリケーション
   - `JobApplication::where('job_id', $jobPost->id)->where('worker_id', auth()->id())->exists()`
   - 求人一覧では、N+1問題回避のため応募データを先読み込み
   - `JobPost::with(['applications' => fn($q) => $q->where('worker_id', auth()->id())])`
+
+#### 応募一覧画面（ワーカー向け）
+- **ルート**: `GET /applications`
+- **ルート名**: `applications.index`
+- **コンポーネント**: `resources/views/livewire/applications/index.blade.php`
+- **ミドルウェア**: `auth`, `role:worker`
+- **機能**: 自分の応募履歴一覧表示、検索・フィルタ機能
+- **表示内容**:
+  - 自分が応募した求人のリスト（1ページ20件）
+  - 求人タイトル、企業名、雇用形態、勤務地、給与
+  - ステータス（バッジ）
+  - 応募日
+  - 判定日（承認/不承認の場合のみ）
+- **検索・フィルタ機能**:
+  - ステータスフィルタ（チェックボックス、applied, accepted, rejected, declined）
+  - キーワード検索（求人タイトル、企業名）
+  - 並び替え（応募日の新しい順/古い順）
+- **ページネーション**: 1ページ20件
+- **アクション**:
+  - 詳細ボタン（常に表示、applications.showへ遷移）
+- **パフォーマンス**: N+1問題対策（`with(['jobPost.company', 'jobPost.employmentType', 'jobPost.location'])`）
+
+#### 応募詳細画面（ワーカー向け）
+- **ルート**: `GET /applications/{jobApplication}`
+- **ルート名**: `applications.show`
+- **コンポーネント**: `resources/views/livewire/applications/show.blade.php`
+- **ミドルウェア**: `auth`（workerとcompany共通）
+- **機能**: 応募詳細表示、辞退機能（ワーカー）、承認・不承認機能（企業、13.mdで追加）
+- **表示内容**:
+  - 応募情報（応募日、ステータス、判定日、辞退日）
+  - 求人情報（タイトル、企業名、雇用形態、勤務地、給与、勤務時間、詳細内容など）
+  - 志望動機
+- **アクション**:
+  - 辞退ボタン（status='applied'の場合のみ）
+  - 辞退確認モーダル（「本当に辞退しますか？」）
+- **辞退処理**:
+  - statusを'declined'に更新
+  - declined_atに現在日時を設定
+  - 処理後、応募一覧（applications.index）にリダイレクト
+- **ポリシー**: `view`アクション（自分の応募のみ閲覧可能）
+- **パフォーマンス**: N+1問題対策（`with(['jobPost.company', 'jobPost.employmentType', 'jobPost.workStyle', 'jobPost.industry', 'jobPost.location'])`）

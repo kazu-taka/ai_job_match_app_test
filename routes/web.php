@@ -63,6 +63,12 @@ Route::middleware(['auth', 'role:company'])->group(function () {
 // 求人応募管理（ワーカーユーザー専用）
 Route::middleware(['auth', 'role:worker'])->group(function () {
     Volt::route('jobs/{jobPost}/apply', 'jobs.apply')->name('jobs.apply');
+    Volt::route('applications', 'applications.index')->name('applications.index');
+});
+
+// 応募管理（認証必須 - workerとcompany共通）
+Route::middleware(['auth'])->group(function () {
+    Volt::route('applications/{jobApplication}', 'applications.show')->name('applications.show');
 });
 
 // 求人投稿管理（認証必須） - 動的ルートは最後に配置

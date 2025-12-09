@@ -48,3 +48,8 @@ Route::middleware(['auth', 'role:worker'])->group(function () {
     Volt::route('worker/profile', 'worker.show')->name('worker.profile');
     Volt::route('worker/edit', 'worker.edit')->name('worker.edit');
 });
+
+// 求人投稿管理（認証必須）
+Route::middleware(['auth'])->group(function () {
+    Volt::route('jobs', 'jobs.index')->name('jobs.index');
+});

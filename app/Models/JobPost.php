@@ -60,35 +60,53 @@ class JobPost extends Model
     }
 
     /**
-     * 雇用形態コードを取得
+     * 雇用形態コードを取得（メモ化）
      */
     public function employmentType(): ?string
     {
-        return Code::query()
-            ->where('type', 1)
-            ->where('type_id', $this->employment_type_id)
-            ->first()?->name;
+        static $cache = [];
+
+        if (! isset($cache[$this->employment_type_id])) {
+            $cache[$this->employment_type_id] = Code::query()
+                ->where('type', 1)
+                ->where('type_id', $this->employment_type_id)
+                ->value('name');
+        }
+
+        return $cache[$this->employment_type_id];
     }
 
     /**
-     * 勤務形態コードを取得
+     * 勤務形態コードを取得（メモ化）
      */
     public function workStyle(): ?string
     {
-        return Code::query()
-            ->where('type', 2)
-            ->where('type_id', $this->work_style_id)
-            ->first()?->name;
+        static $cache = [];
+
+        if (! isset($cache[$this->work_style_id])) {
+            $cache[$this->work_style_id] = Code::query()
+                ->where('type', 2)
+                ->where('type_id', $this->work_style_id)
+                ->value('name');
+        }
+
+        return $cache[$this->work_style_id];
     }
 
     /**
-     * 業種コードを取得
+     * 業種コードを取得（メモ化）
      */
     public function industry(): ?string
     {
-        return Code::query()
-            ->where('type', 3)
-            ->where('type_id', $this->industry_id)
-            ->first()?->name;
+        static $cache = [];
+
+        if (! isset($cache[$this->industry_id])) {
+            $cache[$this->industry_id] = Code::query()
+                ->where('type', 3)
+                ->where('type_id', $this->industry_id)
+                ->value('name');
+        }
+
+        return $cache[$this->industry_id];
     }
 }

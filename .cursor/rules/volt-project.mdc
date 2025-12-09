@@ -326,3 +326,16 @@ $save = function () {
     $this->items = Item::all();  // 状態を更新
 };
 ```
+
+### NG: Alpine.js構文でBlade関数を使用
+```php
+<!-- :href はAlpine.js構文でPHP関数は呼べない -->
+<a :href="route('jobs.show', $job)" wire:navigate>### OK: Blade構文でroute()を使用
+```
+
+### OK: Blade構文でroute()を使用
+**ルール**: `route()`, `url()`, `asset()` などのPHPヘルパー関数は必ず `{{ }}` で囲む。`:href` はJavaScript式用。
+```php
+<!-- {{ }} でサーバーサイド評価 -->
+<a href="{{ route('jobs.show', $job) }}" wire:navigate>
+```

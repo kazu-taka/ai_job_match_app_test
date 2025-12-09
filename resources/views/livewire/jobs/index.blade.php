@@ -117,8 +117,8 @@ $resetFilters = function () {
         <div class="flex items-center justify-between">
             <flux:heading size="xl">求人一覧</flux:heading>
             @if (Auth::user()->role === 'company')
-                <flux:button variant="primary" disabled>
-                    新規求人投稿（準備中）
+                <flux:button :href="route('jobs.create')" wire:navigate variant="primary">
+                    新規求人投稿
                 </flux:button>
             @endif
         </div>
@@ -226,7 +226,7 @@ $resetFilters = function () {
             @if ($this->jobs->count() > 0)
                 <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     @foreach ($this->jobs as $job)
-                        <a href="#" wire:navigate
+                        <a href="{{ route('jobs.show', $job) }}" wire:navigate
                             class="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
                             {{-- 求人タイトル --}}
                             <flux:heading size="lg" class="mb-2">{{ $job->title }}</flux:heading>

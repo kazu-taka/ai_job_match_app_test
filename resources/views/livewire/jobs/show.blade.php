@@ -2,14 +2,27 @@
 
 declare(strict_types=1);
 
+use App\Models\JobApplication;
 use App\Models\JobPost;
 
-use function Livewire\Volt\{layout, mount, state, title};
+use function Livewire\Volt\{computed, layout, mount, state, title};
 
 layout('components.layouts.app');
 title('求人詳細');
 
 state(['job' => null]);
+
+// ワーカーが応募済みかチェック
+$isApplied = computed(function () {
+    if (auth()->user()->role !== 'worker') {
+        return false;
+    }
+
+    return JobApplication::query()
+        ->where('job_id', $this->job->id)
+        ->where('worker_id', auth()->id())
+        ->exists();
+});
 
 // 求人データを読み込み
 mount(function (JobPost $jobPost) {
@@ -155,10 +168,15 @@ $delete = function () {
         <div class="flex justify-between">
             <div>
                 @if (Auth::user()->role === 'worker')
-                    {{-- ワーカーユーザー: 応募ボタン --}}
-                    <flux:button variant="primary" disabled>
-                        応募する（準備中）
-                    </flux:button>
+                    @if ($this->isApplied)
+                        {{-- 応募済みバッジ --}}
+                        <flux:badge color="blue" size="lg" class="px-4 py-2">応募済み</flux:badge>
+                    @else
+                        {{-- ワーカーユーザー: 応募ボタン --}}
+                        <flux:button :href="route('jobs.apply', $job)" wire:navigate variant="primary">
+                            応募する
+                        </flux:button>
+                    @endif
                 @endif
             </div>
 

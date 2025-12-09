@@ -67,8 +67,14 @@ $updatedSelectedPrefecture = function () {
 
 // 求人一覧を取得（検索・フィルタ適用）
 $jobs = computed(function () {
-    return JobPost::query()
-        ->with(['company', 'location'])
+    $query = JobPost::query()->with(['company', 'location']);
+
+    // ワーカーユーザーの場合、応募データを先読み込み（N+1問題回避）
+    if (auth()->user()->role === 'worker') {
+        $query->with(['applications' => fn($q) => $q->where('worker_id', auth()->id())]);
+    }
+
+    return $query
         ->when($this->search, function (Builder $query) {
             $query->where(function (Builder $q) {
                 $q->where('title', 'like', '%' . $this->search . '%')->orWhere('description', 'like', '%' . $this->search . '%');
@@ -227,9 +233,20 @@ $resetFilters = function () {
                 <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     @foreach ($this->jobs as $job)
                         <a href="{{ route('jobs.show', $job) }}" wire:navigate
-                            class="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+                            class="relative block rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+
+                            {{-- 応募済みバッジ（ワーカーのみ） --}}
+                            @if (Auth::user()->role === 'worker' && $job->applications->isNotEmpty())
+                                <div class="absolute right-4 top-4">
+                                    <flux:badge color="blue" size="sm">応募済み</flux:badge>
+                                </div>
+                            @endif
+
                             {{-- 求人タイトル --}}
-                            <flux:heading size="lg" class="mb-2">{{ $job->title }}</flux:heading>
+                            <flux:heading size="lg" class="mb-2"
+                                :class="Auth::user()->role === 'worker' && $job->applications->isNotEmpty() ? 'pr-24' : ''">
+                                {{ $job->title }}
+                            </flux:heading>
 
                             {{-- 企業名 --}}
                             <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">

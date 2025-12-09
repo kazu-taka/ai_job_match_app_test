@@ -63,7 +63,7 @@ class JobPost extends Model
     /**
      * 応募情報との1対多リレーション
      */
-    public function jobApplications(): HasMany
+    public function applications(): HasMany
     {
         return $this->hasMany(JobApplication::class, 'job_id');
     }

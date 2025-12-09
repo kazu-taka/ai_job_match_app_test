@@ -41,6 +41,7 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'role:company'])->group(function () {
     Volt::route('company/profile', 'company.show')->name('company.profile');
     Volt::route('company/edit', 'company.edit')->name('company.edit');
+    Volt::route('applications/received', 'applications.received')->name('applications.received');
 });
 
 // ワーカーユーザー専用のルート

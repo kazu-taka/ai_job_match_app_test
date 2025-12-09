@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use App\Http\Requests\StoreJobApplicationRequest;
+use App\Mail\ApplicationReceivedMail;
 use App\Models\JobApplication;
 use App\Models\JobPost;
+use Illuminate\Support\Facades\Mail;
 
 use function Livewire\Volt\{layout, mount, rules, state, title};
 
@@ -57,13 +59,19 @@ $apply = function () {
     }
 
     // 応募データを登録
-    JobApplication::create([
+    $application = JobApplication::create([
         'job_id' => $this->job->id,
         'worker_id' => auth()->id(),
         'motive' => $this->motive,
         'status' => 'applied',
         'applied_at' => now(),
     ]);
+
+    // リレーションを先読み込み
+    $application->load(['jobPost.company', 'worker']);
+
+    // 企業に応募通知メールを送信
+    Mail::to($application->jobPost->company->email)->send(new ApplicationReceivedMail($application));
 
     session()->flash('success', '応募が完了しました。');
 

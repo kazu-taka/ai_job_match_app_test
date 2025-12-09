@@ -502,3 +502,63 @@ AI求人マッチングアプリケーション
   - judged_atに現在日時を設定
   - 処理後、企業向け応募一覧（applications.received）にリダイレクト
 - **パフォーマンス**: N+1問題対策（`with(['jobPost.company', 'jobPost.employmentType', 'jobPost.workStyle', 'jobPost.industry', 'jobPost.location', 'worker.workerProfile.desiredLocation'])`）
+
+### 通知機能
+
+#### 応募通知（企業向け）
+- **送信タイミング**: ワーカーが応募した時
+- **送信先**: 応募された求人の企業ユーザー
+- **件名**: 新しい応募がありました
+- **本文内容**:
+  - ワーカー名
+  - 求人タイトル
+  - 応募日
+  - 志望動機
+  - 詳細確認リンク（applications.show）
+- **Mailableクラス**: `App\Mail\ApplicationReceivedMail`
+- **テンプレート**: `resources/views/emails/application-received.blade.php`
+
+#### 承認通知（ワーカー向け）
+- **送信タイミング**: 企業が応募を承認した時
+- **送信先**: 応募したワーカーユーザー
+- **件名**: 応募が承認されました
+- **本文内容**:
+  - 企業名
+  - 求人タイトル
+  - 承認日
+  - 詳細確認リンク（applications.show）
+- **Mailableクラス**: `App\Mail\ApplicationAcceptedMail`
+- **テンプレート**: `resources/views/emails/application-accepted.blade.php`
+
+#### 不承認通知（ワーカー向け）
+- **送信タイミング**: 企業が応募を不承認にした時
+- **送信先**: 応募したワーカーユーザー
+- **件名**: 応募結果のお知らせ
+- **本文内容**:
+  - 企業名
+  - 求人タイトル
+  - 判定日
+  - 詳細確認リンク（applications.show）
+- **Mailableクラス**: `App\Mail\ApplicationRejectedMail`
+- **テンプレート**: `resources/views/emails/application-rejected.blade.php`
+
+#### 辞退通知（企業向け）
+- **送信タイミング**: ワーカーが応募を辞退した時
+- **送信先**: 応募された求人の企業ユーザー
+- **件名**: 応募が辞退されました
+- **本文内容**:
+  - ワーカー名
+  - 求人タイトル
+  - 辞退日
+  - 詳細確認リンク（applications.show）
+- **Mailableクラス**: `App\Mail\ApplicationDeclinedMail`
+- **テンプレート**: `resources/views/emails/application-declined.blade.php`
+
+#### 実装箇所
+- 応募画面（resources/views/livewire/jobs/apply.blade.php）: 応募処理後にApplicationReceivedMailを送信
+- 応募詳細画面（resources/views/livewire/applications/show.blade.php）: 承認処理後にApplicationAcceptedMailを送信
+- 応募詳細画面（resources/views/livewire/applications/show.blade.php）: 不承認処理後にApplicationRejectedMailを送信
+- 応募詳細画面（resources/views/livewire/applications/show.blade.php）: 辞退処理後にApplicationDeclinedMailを送信
+
+#### メール送信方法
+- `Mail::to($user->email)->send(new MailableClass($application))`形式で送信

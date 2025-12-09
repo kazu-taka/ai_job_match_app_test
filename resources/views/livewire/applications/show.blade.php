@@ -2,8 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Mail\ApplicationAcceptedMail;
+use App\Mail\ApplicationDeclinedMail;
+use App\Mail\ApplicationRejectedMail;
 use App\Models\JobApplication;
-use function Livewire\Volt\{state, computed, layout, title, mount};
+use Illuminate\Support\Facades\Mail;
+
+use function Livewire\Volt\{computed, layout, mount, state, title};
 
 layout('components.layouts.app');
 title('応募詳細');
@@ -75,6 +80,12 @@ $decline = function () {
         'declined_at' => now(),
     ]);
 
+    // リレーションを先読み込み（メール送信用）
+    $this->jobApplication->load(['jobPost.company', 'worker']);
+
+    // 企業に辞退通知メールを送信
+    Mail::to($this->jobApplication->jobPost->company->email)->send(new ApplicationDeclinedMail($this->jobApplication));
+
     session()->flash('success', '応募を辞退しました。');
 
     return $this->redirect(route('applications.index'), navigate: true);
@@ -97,6 +108,12 @@ $accept = function () {
         'judged_at' => now(),
     ]);
 
+    // リレーションを先読み込み（メール送信用）
+    $this->jobApplication->load(['jobPost.company', 'worker']);
+
+    // ワーカーに承認通知メールを送信
+    Mail::to($this->jobApplication->worker->email)->send(new ApplicationAcceptedMail($this->jobApplication));
+
     session()->flash('success', '応募を承認しました。');
 
     return $this->redirect(route('applications.received'), navigate: true);
@@ -118,6 +135,12 @@ $reject = function () {
         'status' => 'rejected',
         'judged_at' => now(),
     ]);
+
+    // リレーションを先読み込み（メール送信用）
+    $this->jobApplication->load(['jobPost.company', 'worker']);
+
+    // ワーカーに不承認通知メールを送信
+    Mail::to($this->jobApplication->worker->email)->send(new ApplicationRejectedMail($this->jobApplication));
 
     session()->flash('success', '応募を不承認にしました。');
 

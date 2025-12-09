@@ -85,6 +85,14 @@ class User extends Authenticatable
     }
 
     /**
+     * 送信したメッセージとの1対多リレーション
+     */
+    public function sentMessages(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    /**
      * Get the user's initials
      */
     public function initials(): string

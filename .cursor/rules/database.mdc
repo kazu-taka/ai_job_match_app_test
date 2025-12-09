@@ -447,3 +447,25 @@ alwaysApply: true
 - expires_atは募集期限
   - 期限あり: 登録日から1ヶ月後、2ヶ月後、3ヶ月後（9件）
   - 期限なし: NULL（34件）
+
+---
+
+### chat_roomsテーブル
+
+#### サンプルデータ
+
+すべての応募に対してチャットルームを作成する。
+
+**作成ロジック**:
+```php
+$applications = JobApplication::all();
+foreach ($applications as $application) {
+    ChatRoom::create([
+        'application_id' => $application->id,
+    ]);
+}
+```
+
+#### 備考
+- 通常は応募時に自動作成されるが、既存の応募データに対して補完的にチャットルームを作成
+- application_idはユニーク制約があるため、重複作成は不可
